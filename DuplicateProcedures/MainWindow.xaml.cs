@@ -7,6 +7,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
+using System.Windows.Input;
+using System.Xml;
+using System.Xml.Serialization;
 
 namespace DuplicateProceduresView
 {
@@ -45,14 +48,15 @@ namespace DuplicateProceduresView
 
     public partial class MainWindow : Window
     {
+        public string bodyFile = null;
+        public string headerFile = null;
+        public Config Config { get; set; } = null;
         public string OldHeader = "";
         public string OldBody = "";
         public string BodyRegex { get; } =
             @"[ \t]*((FUNCTION|PROCEDURE)\s+([a-zA-Z0-9_-]*?)(\s*(\(.*?\)))?(\s*PIPELINED)?)\s+(IS|AS)\s+(.*?)END(\s+\3)\s*;";
 
         List<Procedure> Procedures = new List<Procedure>();
-        string headerFile = @"C:\Users\rene\source\repos\DuplicateProcedures\testHeader.txt";
-        string bodyFile = @"C:\Users\rene\source\repos\DuplicateProcedures\testBody.txt";
 
         public static string HeaderRegex(string procedureName)
         {
@@ -63,12 +67,14 @@ namespace DuplicateProceduresView
         {
             InitializeComponent();
             WindowState = WindowState.Maximized;
-            foreach (var p in getProcedures(bodyFile, headerFile))
+            using (FileStream xmlStream = new FileStream("config.xml", FileMode.Open))
             {
-                Procedures.Add(p);
-            };
-            dgProcedures.ItemsSource = Procedures;
-            ProceduresChanged();
+                using (XmlReader xmlReader = XmlReader.Create(xmlStream))
+                {
+                    XmlSerializer serializer = new XmlSerializer(typeof(Config));
+                    Config = serializer.Deserialize(xmlReader) as Config;
+                }
+            }
         }
 
         private void tbSearchProcedure_TextChanged(object sender, TextChangedEventArgs e)
@@ -213,15 +219,58 @@ namespace DuplicateProceduresView
             }
         }
 
-        private void tbPackage_TextChanged(object sender, TextChangedEventArgs e)
+        private void tbHeader_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
-            var workspace = @"c:/users/rene/";
-            switch(tbPackage.Text.Trim().ToLower())
+            try
             {
-                case "p_bewohner_v7":
-                    headerFile = workspace + "phbewo_v7.sql";
-                    bodyFile = workspace + "bhbewo_v7.sql";
-                    break;
+                if (e.Key != Key.Enter) { return; }
+                var p = tbHeader.Text.Trim().ToLower();
+                if (Regex.IsMatch(p, "^[a-zA-Z0-9_-]+$"))
+                {
+                    p = Config.remap.Where(x => x.from == p).Select(x => x.to).FirstOrDefault() ?? p;
+                    var workingDir = Config.Schema.First(schema => Regex.IsMatch(p, schema.regex)).workingDir;
+                    tbHeader.Text = Path.Combine(workingDir, "ph" + p + ".sql");
+                    tbBody.Text = Path.Combine(workingDir, "bh" + p + ".sql");
+                }
+                Procedures = getProcedures(tbBody.Text, tbHeader.Text).ToList();
+                dgProcedures.ItemsSource = Procedures;
+                ProceduresChanged();
+            }
+            catch(Exception err)
+            {
+                MessageBox.Show("Sorry, an error occured: " + err.ToString());
+            }
+
+        }
+
+        private void tbBody_KeyDown(object sender, KeyEventArgs e)
+        {
+            try
+            {
+                if (e.Key != Key.Enter) { return; }
+                var p = tbBody.Text.Trim().ToLower();
+                if(Regex.IsMatch(p, "p_(.*)?(_v?7$|$)?"))
+                {
+                    p = p.Substring(2);
+                }
+                if (Regex.IsMatch(p, "^[a-zA-Z0-9_-]+$"))
+                {
+                    p = Config.remap.Where(x => x.from == p).Select(x => x.to).FirstOrDefault() ?? p;
+                    var workingDir = Config.Schema.First(schema => Regex.IsMatch(p, schema.regex)).workingDir;
+                    tbHeader.Text = Path.Combine(workingDir, "ph" + p + ".sql");
+                    tbBody.Text = Path.Combine(workingDir, "bh" + p + ".sql");
+                }
+                Procedures = getProcedures(tbBody.Text, tbHeader.Text).ToList();
+                dgProcedures.ItemsSource = Procedures;
+                ProceduresChanged();
+                bodyFile = tbBody.Text;
+                headerFile = tbHeader.Text;
+            }
+            catch(Exception err)
+            {
+                MessageBox.Show("Sorry, an error occured: " + err.ToString());
+                bodyFile = null;
+                headerFile = null;
             }
         }
     }

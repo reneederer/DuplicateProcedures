@@ -6,17 +6,16 @@
         xmlns:local="clr-namespace:DuplicateProceduresView"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
-    <Grid HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="-10,0,-0.4,-333" Height="753">
+    <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="259*"/>
-            <ColumnDefinition Width="534*"/>
+            <ColumnDefinition Width="368.8"/>
+            <ColumnDefinition/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="139*"/>
-            <RowDefinition Height="0*"/>
-            <RowDefinition Height="614*"/>
+            <RowDefinition Height="130"/>
+            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <DataGrid x:Name="dgProcedures" CanUserAddRows="False" GridLinesVisibility="None" AlternationCount="2" AlternatingRowBackground="#dedede" RowBackground="#efefef" SelectionMode="Single" SelectionUnit="FullRow" AutoGenerateColumns="False" TabIndex="-1" VerticalAlignment="Stretch" Margin="12,89.8,8.4,8.8" Focusable="True" SelectionChanged="dgProcedures_SelectionChanged" Grid.Row="2">
+        <DataGrid x:Name="dgProcedures" CanUserAddRows="False" GridLinesVisibility="None" AlternationCount="2" AlternatingRowBackground="#dedede" RowBackground="#efefef" SelectionMode="Single" SelectionUnit="FullRow" AutoGenerateColumns="False" TabIndex="-1" VerticalAlignment="Stretch" Margin="15,138.4,11.8,15" Focusable="True" SelectionChanged="dgProcedures_SelectionChanged" Grid.Row="1">
             <DataGrid.CellStyle>
                 <Style TargetType="DataGridCell">
                     <Setter Property="BorderThickness" Value="0"/>
@@ -34,24 +33,24 @@
                 </Style>
             </DataGrid.RowStyle>
         </DataGrid>
-        <TextBox x:Name="tbPackage" HorizontalAlignment="Left" Height="23" Margin="73,14.8,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="179" Grid.Row="2" TextChanged="tbPackage_TextChanged"/>
-        <TextBox x:Name="tbSearchProcedure" HorizontalAlignment="Left" Height="23" Margin="74,56.8,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="178" TextChanged="tbSearchProcedure_TextChanged" RenderTransformOrigin="0.433,-1.843" Grid.Row="2"/>
-        <ScrollViewer Background="Red" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="5.6,10.8,0,7.8" Grid.Column="1" Grid.Row="2">
+        <TextBox x:Name="tbSearchProcedure" Height="23" TextWrapping="NoWrap" VerticalAlignment="Top" TextChanged="tbSearchProcedure_TextChanged" RenderTransformOrigin="0.433,-1.843" Grid.Row="1" Margin="70,106.4,11.8,0"/>
+        <ScrollViewer HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="1" Margin="18.2,15.4,14.6,15" Grid.Column="1">
             <StackPanel x:Name="pnlProcedures" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
             </StackPanel>
         </ScrollViewer>
-        <Button x:Name="btnSaveFiles" Content="Save files and close program" HorizontalAlignment="Left" Margin="39,67,0,0" VerticalAlignment="Top" Width="201" Click="btnSaveFiles_Click" Height="19"/>
-        <Label x:Name="lblSelectProcedures" Content="Select:" HorizontalAlignment="Left" Margin="15,53.8,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.464,5.352" Grid.Row="2" Height="25" Width="45"/>
-        <Label x:Name="lblPackage" Content="Package:" HorizontalAlignment="Left" Margin="11,12.8,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.464,5.352" Grid.Row="2" Height="25" Width="55"/>
-        <Grid Background="#efefef" Grid.Column="1" HorizontalAlignment="Stretch" Margin="5.6,0,6,0" Height="135" VerticalAlignment="Top">
-            <Label x:Name="lblSearch" Content="Search:" HorizontalAlignment="Left" Margin="10,20,0,0" VerticalAlignment="Top" Height="25" Width="52"/>
-            <TextBox x:Name="tbSearch" HorizontalAlignment="Left" Height="23" Margin="78,20,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
-            <Label x:Name="lblReplace" Content="Replace:" HorizontalAlignment="Left" Margin="10,55,0,0" VerticalAlignment="Top" Height="25" Width="52" RenderTransformOrigin="0.523,1.992"/>
-            <TextBox x:Name="tbReplace" HorizontalAlignment="Left" Height="23" Margin="78,55,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"/>
-            <RadioButton x:Name="rbReplaceEverywhere" Content="Replace everywhere" IsChecked="True"  GroupName="ReplaceType" HorizontalAlignment="Left" Margin="214,17,0,0" VerticalAlignment="Top" Height="15" Width="124"/>
-            <RadioButton x:Name="rbReplaceSelected" Content="Replace in selected text" GroupName="ReplaceType" HorizontalAlignment="Left" Margin="214,31,0,0" VerticalAlignment="Top" Height="14" Width="144"/>
-            <Button x:Name="btnReplace" Content="Replace" HorizontalAlignment="Left" Margin="78,98,0,0" VerticalAlignment="Top" Width="75" Click="btnReplace_Click" Height="19"/>
-            <CheckBox x:Name="cbReplaceSimilarMatches" Content="Replace similar matches" HorizontalAlignment="Left" Margin="214,61,0,0" VerticalAlignment="Top" Height="15" Width="146"/>
-        </Grid>
+        <Button x:Name="btnSaveFiles" Content="Save files and close program" Margin="15,15,11.8,92.6" Click="btnSaveFiles_Click"/>
+        <Label x:Name="lblHeader" Content="Header:" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Row="1" Height="25" Width="55" Margin="15,12.4,0,0"/>
+        <TextBox x:Name="tbHeader" Height="23" TextWrapping="NoWrap" VerticalAlignment="Top" KeyDown="tbHeader_KeyDown" Margin="70,15.4,11.8,0" Grid.Row="1"/>
+        <Label x:Name="lblBody" Content="Body:" HorizontalAlignment="Left" Margin="15,51.4,0,0" VerticalAlignment="Top" Height="25" Width="55" Grid.Row="1"/>
+        <TextBox x:Name="tbBody" Height="23" Margin="70,53.4,11.8,0" TextWrapping="NoWrap" VerticalAlignment="Top" KeyDown="tbBody_KeyDown" Grid.Row="1"/>
+        <Label x:Name="lblSelectProcedures" Content="Select:" HorizontalAlignment="Left" Margin="15,103.4,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.464,5.352" Height="25" Width="47" Grid.Row="1"/>
+        <Label x:Name="lblSearch" Content="Search:" HorizontalAlignment="Left" Margin="18.2,12,0,0" VerticalAlignment="Top" Height="25" Width="52" Grid.Column="1"/>
+        <TextBox x:Name="tbSearch" HorizontalAlignment="Left" Height="23" Margin="77.2,14,0,0" TextWrapping="NoWrap" VerticalAlignment="Top" Width="120" Grid.Column="1"/>
+        <Label x:Name="lblReplace" Content="Replace:" HorizontalAlignment="Left" Margin="18.2,44,0,0" VerticalAlignment="Top" Height="25" Width="56" RenderTransformOrigin="0.523,1.992" Grid.Column="1"/>
+        <TextBox x:Name="tbReplace" HorizontalAlignment="Left" Height="23" Margin="77.2,46,0,0" TextWrapping="NoWrap" VerticalAlignment="Top" Width="120" Grid.Column="1"/>
+        <RadioButton x:Name="rbReplaceEverywhere" Content="Replace everywhere" IsChecked="True"  GroupName="ReplaceType" HorizontalAlignment="Left" Margin="225.2,13,0,0" VerticalAlignment="Top" Height="15" Width="124" Grid.Column="1"/>
+        <RadioButton x:Name="rbReplaceSelected" Content="Replace in selected text" GroupName="ReplaceType" HorizontalAlignment="Left" Margin="225.2,29,0,0" VerticalAlignment="Top" Height="14" Width="144" Grid.Column="1"/>
+        <Button x:Name="btnReplace" Content="Replace" HorizontalAlignment="Left" Margin="77.2,79,0,0" VerticalAlignment="Top" Width="120" Click="btnReplace_Click" Height="23" Grid.Column="1"/>
+        <CheckBox x:Name="cbReplaceSimilarMatches" Content="Replace similar matches" Margin="225.2,54,0,0" VerticalAlignment="Top" Height="15" Grid.Column="1" HorizontalAlignment="Left" Width="166"/>
     </Grid>
 </Window>

@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Config>
+  <remap from="bewohner" to="bewo"></remap>
+  <remap from="bewohner_7" to="bewo_7"></remap>
+  <remap from="bewohner_v7" to="bewo_v7"></remap>
+  <Schema name="Senso7" workingDir="c:/workspace/APEX7/Verw/sqlscri" regex="_v7$"></Schema>
+  <Schema name="Senso7_alt" workingDir="c:/workspace/APEX7alt/Verw/sqlscri" regex="_7$"></Schema>
+  <Schema name="Senso6" workingDir="C:\Users\rene\source\repos\DuplicateProcedures\" regex=".*"></Schema>
+</Config>
