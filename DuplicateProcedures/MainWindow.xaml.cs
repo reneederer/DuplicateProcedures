@@ -11,132 +11,103 @@ using System.Windows.Input;
 using System.Xml;
 using System.Xml.Serialization;
 
-namespace DuplicateProceduresView
+namespace DuplicateProcedures
 {
     public class Procedure
     {
-        public int HeaderLineIndex { get; set; }
-        public int BodyLineIndex { get; set; }
+        public int HeaderLineBeginIndex { get; set; }
+        public int BodyLineBeginIndex { get; set; }
+        public int HeaderLineEndIndex { get; set; }
+        public int BodyLineEndIndex { get; set; }
         public string OldName { get {
                 var m = Regex.Match(OldHeader, @"[ \t]*((FUNCTION|PROCEDURE)\s+([a-zA-Z0-9_-]*?)(\s*(\(.*?\)))?(\s*PIPELINED)?)\s*;", RegexOptions.Singleline);
-                if(m.Success) { return m.Groups[3].Value; }
-                else { return "Sorry, I could not extract the header name."; }
+                return m.Groups[3].Value;
             } }
         public string OldBody { get; set; }
         public string NewName { get {
                 var m = Regex.Match(NewHeader, @"[ \t]*((FUNCTION|PROCEDURE)\s+([a-zA-Z0-9_-]*?)(\s*(\(.*?\)))?(\s*PIPELINED)?)\s*;", RegexOptions.Singleline);
-                if (m.Success) { return m.Groups[1].Value; }
-                else { return "Sorry, I could not extract the header name."; }
+                return m.Groups[3].Value;
             } }
-        private string n; 
         public string NewBody { get; set; }
         public string OldHeader { get
             {
                 var m = Regex.Match(OldBody, @"[ \t]*((FUNCTION|PROCEDURE)\s+([a-zA-Z0-9_-]*?)(\s*(\(.*?\)))?(\s*PIPELINED)?)\s+(IS|AS)\s+(.*?)END(\s+\3)\s*;", RegexOptions.Singleline);
-                if(m.Success) { return m.Groups[1].Value + ";"; }
-                else { return "Sorry, I could not extract the header definition."; }
+                return m.Groups[1].Value + ";";
             } }
         public string NewHeader { get
             {
                 var m = Regex.Match(NewBody, @"[ \t]*((FUNCTION|PROCEDURE)\s+([a-zA-Z0-9_-]*?)(\s*(\(.*?\)))?(\s*PIPELINED)?)\s+(IS|AS)\s+(.*?)END(\s+\3)\s*;", RegexOptions.Singleline);
-                if(m.Success) { return m.Groups[1].Value + ";"; }
-                else { return "Sorry, I could not extract the header definition."; }
+                return m.Groups[1].Value + ";";
             } }
         public string Color { get; set; }
         public bool ShouldBeCopied { get; set; } = true;
     }
 
+
     public partial class MainWindow : Window
     {
-        public string bodyFile = null;
-        public string headerFile = null;
-        public Config Config { get; set; } = null;
-        public string OldHeader = "";
-        public string OldBody = "";
-        public string BodyRegex { get; } =
-            @"[ \t]*((FUNCTION|PROCEDURE)\s+([a-zA-Z0-9_-]*?)(\s*(\(.*?\)))?(\s*PIPELINED)?)\s+(IS|AS)\s+(.*?)END(\s+\3)\s*;";
-
-        List<Procedure> Procedures = new List<Procedure>();
-
-        public static string HeaderRegex(string procedureName)
-        {
-            return @"([ \t]*(FUNCTION|PROCEDURE)\s+" + procedureName + @"\s*(\(.*?\))?\s*(PIPELINED)?\s*;)\s*";
-        }
+        public Manager Manager { get; set; }
 
         public MainWindow()
         {
             InitializeComponent();
             WindowState = WindowState.Maximized;
-            using (FileStream xmlStream = new FileStream("config.xml", FileMode.Open))
-            {
-                using (XmlReader xmlReader = XmlReader.Create(xmlStream))
-                {
-                    XmlSerializer serializer = new XmlSerializer(typeof(Config));
-                    Config = serializer.Deserialize(xmlReader) as Config;
-                }
-            }
+            Manager = new Manager();
+            RoutedCommand copyToTbSearchCmd = new RoutedCommand();
+            copyToTbSearchCmd.InputGestures.Add(new KeyGesture(Key.F3, ModifierKeys.None));
+            CommandBindings.Add(new CommandBinding(copyToTbSearchCmd, tbSearch_SetClipboard));
+
+            RoutedCommand copyToTbReplaceCmd = new RoutedCommand();
+            copyToTbReplaceCmd.InputGestures.Add(new KeyGesture(Key.F4, ModifierKeys.None));
+            CommandBindings.Add(new CommandBinding(copyToTbReplaceCmd, tbReplace_SetClipboard));
+
+            RoutedCommand replaceCmd = new RoutedCommand();
+            replaceCmd.InputGestures.Add(new KeyGesture(Key.F5, ModifierKeys.None));
+            CommandBindings.Add(new CommandBinding(replaceCmd, btnReplace_Click));
+        }
+
+        private void tbSearch_SetClipboard(object sender, RoutedEventArgs e)
+        {
+            ApplicationCommands.Copy.Execute(null, null);
+            tbSearch.Text = Clipboard.GetText();
+        }
+
+        private void tbReplace_SetClipboard(object sender, RoutedEventArgs e)
+        {
+            ApplicationCommands.Copy.Execute(null, null);
+            tbReplace.Text = Clipboard.GetText();
         }
 
         private void tbSearchProcedure_TextChanged(object sender, TextChangedEventArgs e)
         {
-            foreach (var procedure in Procedures)
+            foreach (var procedure in Manager.Procedures)
             {
-                procedure.ShouldBeCopied = procedure.OldName.Contains(tbSearchProcedure.Text);
+                Manager.SetShouldBeCopied(tbSearchProcedure.Text);
                 ProceduresChanged();
             }
         }
-
-        public IEnumerable<Procedure> getProcedures(string bodyFile, string headerFile)
-        {
-            OldBody = File.ReadAllText(bodyFile);
-            var body = OldBody;
-            OldHeader = File.ReadAllText(headerFile);
-            var header = OldHeader;
-            var procedures = new List<Procedure>();
-            int searchFrom = 0;
-            while(true)
-            {
-                var bodyMatch = Regex.Match(body, BodyRegex, RegexOptions.Singleline);
-                if (bodyMatch.Success)
-                {
-                    var headerMatch = Regex.Match(OldHeader, HeaderRegex(bodyMatch.Groups[3].Value));
-                    var procedureText = body.Substring(bodyMatch.Index, bodyMatch.Length);
-                    yield return
-                        new Procedure
-                        { OldBody = procedureText,
-                          NewBody = procedureText,
-                          BodyLineIndex = bodyMatch.Index + bodyMatch.Length + searchFrom,
-                          HeaderLineIndex = headerMatch.Index + headerMatch.Length
-                        };
-                    searchFrom = bodyMatch.Index + bodyMatch.Length;
-                    body = body.Substring(bodyMatch.Index + bodyMatch.Length);
-                    searchFrom = bodyMatch.Index + bodyMatch.Length;
-                }
-                else
-                {
-                    break;
-                }
-            }
-        }
-
        
         private void ProceduresChanged()
         {
             pnlProcedures.Children.Clear();
-            foreach (var procedure in Procedures)
+            foreach (var procedure in Manager.Procedures)
             {
                 if (procedure.ShouldBeCopied)
                 {
                     var editProcedure = new EditProcedure();
+                    double textBoxHeight = 400.0;
+                    double.TryParse(Manager.Config.TextboxHeight ?? "400.0", out textBoxHeight);
+                    editProcedure.t1.Height = textBoxHeight;
+                    editProcedure.t2.Height = textBoxHeight;
                     editProcedure.t1.DataContext = procedure;
                     editProcedure.t2.DataContext = procedure;
                     pnlProcedures.Children.Add(editProcedure);
                 }
             }
-
-            dgProcedures.ItemsSource = Procedures;
+            dgProcedures.ItemsSource = Manager.Procedures;
             dgProcedures.SelectedIndex = -1;
             dgProcedures.Items.Refresh();
+            btnSaveFiles.IsEnabled = Manager.Procedures.Any(x => x.ShouldBeCopied);
         }
 
 
@@ -148,51 +119,65 @@ namespace DuplicateProceduresView
             ProceduresChanged();
         }
 
+
         private void btnSaveFiles_Click(object sender, RoutedEventArgs e)
         {
-            var body = OldBody;
-            int currentIndex = 0;
-            foreach (var procedure in Procedures.Where(x => x.ShouldBeCopied).OrderByDescending(x => x.BodyLineIndex))
+            try
             {
-                body =
-                    body.Substring(currentIndex, procedure.BodyLineIndex)
-                    + "\r\n\r\n\r\n"
-                    + procedure.NewBody
-                    + body.Substring(procedure.BodyLineIndex);
+                var nonFixableDuplicates = Manager.GetNonFixableDuplicates();
+                if (nonFixableDuplicates.Any())
+                {
+                    MessageBox.Show("You are trying to create multiple new definitions for \r\n\t" + String.Join(",\r\n\t", nonFixableDuplicates.Select(x => x.NewName).Distinct()) + ".\r\nSorry, I can't decide which ones to use.", "Multiple definitions found", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+                var fixableDuplicates = Manager.GetFixableDuplicates();
+                if (fixableDuplicates.Any())
+                {
+                    var r = MessageBox.Show("There already exist definitions for \r\n\t\"" + String.Join("\",\r\n\t\"", fixableDuplicates.Select(x => x.NewName).Distinct()) + "\".\r\nDo you want to overwrite them?", "Multiple definitions found", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
+                    if (r == MessageBoxResult.Cancel || r == MessageBoxResult.No)
+                    {
+                        return;
+                    }
+                }
+                Manager.SaveFiles(fixableDuplicates);
+                MessageBox.Show("Your files have been written.\r\nThank you for using Ederer Productivity Tools.\r\nThe program will exit.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                Application.Current.Shutdown();
             }
-            File.WriteAllText(bodyFile + "_1", body);
-
-            var header = OldHeader;
-            currentIndex = 0;
-            foreach (var procedure in Procedures.Where(x => x.ShouldBeCopied).OrderByDescending(x => x.HeaderLineIndex))
+            catch(Exception err)
             {
-                header =
-                    header.Substring(currentIndex, procedure.HeaderLineIndex)
-                    + procedure.NewHeader
-                    + "\r\n"
-                    + header.Substring(procedure.HeaderLineIndex);
+                MessageBox.Show("Sorry, an error occurred:\r\n\r\n" + err.ToString(), "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            File.WriteAllText(headerFile + "_1", header);
-            MessageBox.Show("Your files have been written.\r\nThank you for using Ederer Productivity Tools.\r\nThe program will exit.");
         }
 
         private string Replace(string text, string search, string replace, bool similar)
         {
+            Func<string, string> camelCaseToUnderscoreUpperCase = (s) => Regex.Replace(s, "([^A-Z])([A-Z])", "$1_$2").ToUpper();
+            Func<string, string> firstToUpper = (s) => s.Length == 0 ? "" : (s[0].ToString().ToUpper() + s.Substring(1));
+            Func<string, string> firstToLower = (s) => s.Length == 0 ? "" : (s[0].ToString().ToLower() + s.Substring(1));
+
+            if(String.IsNullOrEmpty(text) || string.IsNullOrEmpty(search) || string.IsNullOrEmpty(replace))
+            {
+                return text;
+            }
+
             if (similar)
             {
+                var s = camelCaseToUnderscoreUpperCase(search);
                 return
-                    (text ?? "")
+                    text
                         .Replace(search, replace)
                         .Replace(search.ToLower(), replace.ToLower())
-                        .Replace(search.ToUpper(), replace.ToUpper());
+                        .Replace(search.ToUpper(), replace.ToUpper())
+                        .Replace(camelCaseToUnderscoreUpperCase(search), camelCaseToUnderscoreUpperCase(replace))
+                        .Replace(firstToLower(search), firstToLower(replace))
+                        .Replace(firstToUpper(search), firstToUpper(replace));
             }
             else
             {
                 return (text ?? "").Replace(search, replace);
             }
         }
-
-        private void btnReplace_Click(object sender, RoutedEventArgs e)
+        private void Replace()
         {
             foreach(var x in pnlProcedures.Children)
             {
@@ -219,59 +204,55 @@ namespace DuplicateProceduresView
             }
         }
 
-        private void tbHeader_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        private void btnReplace_Click(object sender, RoutedEventArgs e)
+        {
+            Replace();
+        }
+
+        private void SetHeaderAndBody(string s)
         {
             try
             {
-                if (e.Key != Key.Enter) { return; }
-                var p = tbHeader.Text.Trim().ToLower();
-                if (Regex.IsMatch(p, "^[a-zA-Z0-9_-]+$"))
+                if (Regex.IsMatch(s, "^[a-zA-Z0-9_-]+$"))
                 {
-                    p = Config.remap.Where(x => x.from == p).Select(x => x.to).FirstOrDefault() ?? p;
-                    var workingDir = Config.Schema.First(schema => Regex.IsMatch(p, schema.regex)).workingDir;
-                    tbHeader.Text = Path.Combine(workingDir, "ph" + p + ".sql");
-                    tbBody.Text = Path.Combine(workingDir, "bh" + p + ".sql");
+                    s = s.Trim().ToLower();
+                    s = Manager.Config.Remap.Where(x => x.from == s).Select(x => x.to).FirstOrDefault() ?? s;
+                    var workingDir = Manager.Config.Schema.First(schema => Regex.IsMatch(s, schema.regex)).workingDir;
+                    tbHeader.Text = Path.Combine(workingDir, "ph" + s + ".sql");
+                    tbBody.Text = Path.Combine(workingDir, "bh" + s + ".sql");
                 }
-                Procedures = getProcedures(tbBody.Text, tbHeader.Text).ToList();
-                dgProcedures.ItemsSource = Procedures;
+                Manager.ReadProcedures(tbHeader.Text, tbBody.Text);
+                dgProcedures.ItemsSource = Manager.Procedures;
                 ProceduresChanged();
             }
             catch(Exception err)
             {
                 MessageBox.Show("Sorry, an error occured: " + err.ToString());
             }
+        }
 
+        private void tbHeader_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if(e.Key != Key.Enter) { return; }
+            SetHeaderAndBody(tbHeader.Text);
         }
 
         private void tbBody_KeyDown(object sender, KeyEventArgs e)
         {
-            try
-            {
-                if (e.Key != Key.Enter) { return; }
-                var p = tbBody.Text.Trim().ToLower();
-                if(Regex.IsMatch(p, "p_(.*)?(_v?7$|$)?"))
-                {
-                    p = p.Substring(2);
-                }
-                if (Regex.IsMatch(p, "^[a-zA-Z0-9_-]+$"))
-                {
-                    p = Config.remap.Where(x => x.from == p).Select(x => x.to).FirstOrDefault() ?? p;
-                    var workingDir = Config.Schema.First(schema => Regex.IsMatch(p, schema.regex)).workingDir;
-                    tbHeader.Text = Path.Combine(workingDir, "ph" + p + ".sql");
-                    tbBody.Text = Path.Combine(workingDir, "bh" + p + ".sql");
-                }
-                Procedures = getProcedures(tbBody.Text, tbHeader.Text).ToList();
-                dgProcedures.ItemsSource = Procedures;
-                ProceduresChanged();
-                bodyFile = tbBody.Text;
-                headerFile = tbHeader.Text;
-            }
-            catch(Exception err)
-            {
-                MessageBox.Show("Sorry, an error occured: " + err.ToString());
-                bodyFile = null;
-                headerFile = null;
-            }
+            if(e.Key != Key.Enter) { return; }
+            SetHeaderAndBody(tbBody.Text);
+        }
+
+        private void tbSearch_KeyDown(object sender, KeyEventArgs e)
+        {
+            if(e.Key != Key.Enter) { return; }
+            Replace();
+        }
+
+        private void tbReplace_KeyDown(object sender, KeyEventArgs e)
+        {
+            if(e.Key != Key.Enter) { return; }
+            Replace();
         }
     }
 }

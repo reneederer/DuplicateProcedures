@@ -1,7 +1,7 @@
-﻿<Application x:Class="DuplicateProceduresView.App"
+﻿<Application x:Class="DuplicateProcedures.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:DuplicateProceduresView"
+             xmlns:local="clr-namespace:DuplicateProcedures"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
          

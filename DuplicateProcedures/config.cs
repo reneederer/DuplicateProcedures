@@ -24,13 +24,26 @@ using System.Xml.Serialization;
 [System.Xml.Serialization.XmlRootAttribute(Namespace="", IsNullable=false)]
 public partial class Config {
     
+    private string textboxHeightField;
+    
     private ConfigRemap[] remapField;
     
     private ConfigSchema[] schemaField;
     
     /// <remarks/>
-    [System.Xml.Serialization.XmlElementAttribute("remap", Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
-    public ConfigRemap[] remap {
+    [System.Xml.Serialization.XmlElementAttribute(Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
+    public string TextboxHeight {
+        get {
+            return this.textboxHeightField;
+        }
+        set {
+            this.textboxHeightField = value;
+        }
+    }
+    
+    /// <remarks/>
+    [System.Xml.Serialization.XmlElementAttribute("Remap", Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
+    public ConfigRemap[] Remap {
         get {
             return this.remapField;
         }
@@ -130,6 +143,29 @@ public partial class ConfigSchema {
         }
         set {
             this.regexField = value;
+        }
+    }
+}
+
+/// <remarks/>
+[System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.7.2558.0")]
+[System.SerializableAttribute()]
+[System.Diagnostics.DebuggerStepThroughAttribute()]
+[System.ComponentModel.DesignerCategoryAttribute("code")]
+[System.Xml.Serialization.XmlTypeAttribute(AnonymousType=true)]
+[System.Xml.Serialization.XmlRootAttribute(Namespace="", IsNullable=false)]
+public partial class NewDataSet {
+    
+    private Config[] itemsField;
+    
+    /// <remarks/>
+    [System.Xml.Serialization.XmlElementAttribute("Config")]
+    public Config[] Items {
+        get {
+            return this.itemsField;
+        }
+        set {
+            this.itemsField = value;
         }
     }
 }
