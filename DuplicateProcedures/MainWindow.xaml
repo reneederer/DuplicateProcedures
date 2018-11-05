@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DuplicateProcedures"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="450" Width="800" Icon="images/r-icon.ico">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="368.8"/>
@@ -34,11 +34,11 @@
             </DataGrid.RowStyle>
         </DataGrid>
         <TextBox x:Name="tbSearchProcedure" Height="23" TextWrapping="NoWrap" VerticalAlignment="Top" TextChanged="tbSearchProcedure_TextChanged" RenderTransformOrigin="0.433,-1.843" Grid.Row="1" Margin="70,106.4,11.8,0"/>
-        <ScrollViewer HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="1" Margin="18.2,15.4,14.6,15" Grid.Column="1">
+        <ScrollViewer HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Row="1" Margin="18.2,15.4,0,15" Grid.Column="1">
             <StackPanel x:Name="pnlProcedures" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
             </StackPanel>
         </ScrollViewer>
-        <Button x:Name="btnSaveFiles" IsEnabled="False" Content="Save files and close program" Margin="15,15,11.8,92.6" Click="btnSaveFiles_Click"/>
+        <Button x:Name="btnSaveFiles" IsEnabled="False" Content="Create Procedures" Margin="15,50,11.8,57.6" Click="btnSaveFiles_Click"/>
         <Label x:Name="lblHeader" Content="Header:" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Row="1" Height="25" Width="55" Margin="15,12.4,0,0"/>
         <TextBox x:Name="tbHeader" Height="23" TextWrapping="NoWrap" VerticalAlignment="Top" KeyDown="tbHeader_KeyDown" Margin="70,15.4,11.8,0" Grid.Row="1"/>
         <Label x:Name="lblBody" Content="Body:" HorizontalAlignment="Left" Margin="15,46.4,0,0" VerticalAlignment="Top" Height="25" Width="55" Grid.Row="1"/>
@@ -52,5 +52,8 @@
         <RadioButton x:Name="rbReplaceSelected" Content="Replace in selected text" GroupName="ReplaceType" HorizontalAlignment="Left" Margin="225.2,29,0,0" VerticalAlignment="Top" Height="14" Width="144" Grid.Column="1"/>
         <CheckBox x:Name="cbReplaceSimilarMatches" Content="Replace similar matches" IsChecked="True" Margin="225.2,54,0,0" VerticalAlignment="Top" Height="15" Grid.Column="1" HorizontalAlignment="Left" Width="166"/>
         <Button x:Name="btnReplace" Content="Replace" HorizontalAlignment="Left" Margin="77.2,79,0,0" VerticalAlignment="Top" Width="120" Click="btnReplace_Click" ToolTip="F5" Height="23" Grid.Column="1"/>
+        <Button x:Name="btnEditConfig" Grid.Column="1" Margin="0,14,-0.4,0" HorizontalAlignment="Right" VerticalAlignment="Top" Click="btnEditConfig_Click" Height="27" Width="27">
+            <Image Source="images/edit-icon.png" />
+        </Button>
     </Grid>
 </Window>

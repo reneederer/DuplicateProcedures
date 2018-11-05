@@ -10,6 +10,7 @@ using System.Windows.Media;
 using System.Windows.Input;
 using System.Xml;
 using System.Xml.Serialization;
+using System.Diagnostics;
 
 namespace DuplicateProcedures
 {
@@ -237,6 +238,11 @@ namespace DuplicateProcedures
         {
             if(e.Key != Key.Enter) { return; }
             Replace();
+        }
+
+        private void btnEditConfig_Click(object sender, RoutedEventArgs e)
+        {
+            Process.Start("config.xml");
         }
     }
 }
