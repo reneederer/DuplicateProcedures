@@ -13,35 +13,6 @@ using System.Xml.Serialization;
 
 namespace DuplicateProcedures
 {
-    public class Procedure
-    {
-        public int HeaderLineBeginIndex { get; set; }
-        public int BodyLineBeginIndex { get; set; }
-        public int HeaderLineEndIndex { get; set; }
-        public int BodyLineEndIndex { get; set; }
-        public string OldName { get {
-                var m = Regex.Match(OldHeader, @"[ \t]*((FUNCTION|PROCEDURE)\s+([a-zA-Z0-9_-]*?)(\s*(\(.*?\)))?(\s*PIPELINED)?)\s*;", RegexOptions.Singleline);
-                return m.Groups[3].Value;
-            } }
-        public string OldBody { get; set; }
-        public string NewName { get {
-                var m = Regex.Match(NewHeader, @"[ \t]*((FUNCTION|PROCEDURE)\s+([a-zA-Z0-9_-]*?)(\s*(\(.*?\)))?(\s*PIPELINED)?)\s*;", RegexOptions.Singleline);
-                return m.Groups[3].Value;
-            } }
-        public string NewBody { get; set; }
-        public string OldHeader { get
-            {
-                var m = Regex.Match(OldBody, @"[ \t]*((FUNCTION|PROCEDURE)\s+([a-zA-Z0-9_-]*?)(\s*(\(.*?\)))?(\s*PIPELINED)?)\s+(IS|AS)\s+(.*?)END(\s+\3)\s*;", RegexOptions.Singleline);
-                return m.Groups[1].Value + ";";
-            } }
-        public string NewHeader { get
-            {
-                var m = Regex.Match(NewBody, @"[ \t]*((FUNCTION|PROCEDURE)\s+([a-zA-Z0-9_-]*?)(\s*(\(.*?\)))?(\s*PIPELINED)?)\s+(IS|AS)\s+(.*?)END(\s+\3)\s*;", RegexOptions.Singleline);
-                return m.Groups[1].Value + ";";
-            } }
-        public string Color { get; set; }
-        public bool ShouldBeCopied { get; set; } = true;
-    }
 
 
     public partial class MainWindow : Window
@@ -82,7 +53,7 @@ namespace DuplicateProcedures
         {
             foreach (var procedure in Manager.Procedures)
             {
-                Manager.SetShouldBeCopied(tbSearchProcedure.Text);
+                Manager.SetCreate(tbSearchProcedure.Text);
                 ProceduresChanged();
             }
         }
@@ -92,7 +63,7 @@ namespace DuplicateProcedures
             pnlProcedures.Children.Clear();
             foreach (var procedure in Manager.Procedures)
             {
-                if (procedure.ShouldBeCopied)
+                if (procedure.MyAction == Action.Create)
                 {
                     var editProcedure = new EditProcedure();
                     double textBoxHeight = 400.0;
@@ -107,7 +78,7 @@ namespace DuplicateProcedures
             dgProcedures.ItemsSource = Manager.Procedures;
             dgProcedures.SelectedIndex = -1;
             dgProcedures.Items.Refresh();
-            btnSaveFiles.IsEnabled = Manager.Procedures.Any(x => x.ShouldBeCopied);
+            btnSaveFiles.IsEnabled = Manager.Procedures.Any(x => x.MyAction == Action.Create);
         }
 
 
@@ -115,7 +86,14 @@ namespace DuplicateProcedures
         {
             var selectedProcedure = dgProcedures.SelectedItem as Procedure;
             if (selectedProcedure == null) { return; }
-            selectedProcedure.ShouldBeCopied = !selectedProcedure.ShouldBeCopied;
+            if(selectedProcedure.MyAction == Action.None)
+            {
+                selectedProcedure.MyAction = Action.Create;
+            }
+            else
+            {
+                selectedProcedure.MyAction = Action.None;
+            }
             ProceduresChanged();
         }
 
@@ -138,10 +116,16 @@ namespace DuplicateProcedures
                     {
                         return;
                     }
+                    else
+                    {
+                        foreach (var p in fixableDuplicates)
+                        {
+                            p.MyAction = Action.Replace;
+                        }
+                    }
                 }
-                Manager.SaveFiles(fixableDuplicates);
-                MessageBox.Show("Your files have been written.\r\nThank you for using Ederer Productivity Tools.\r\nThe program will exit.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
-                Application.Current.Shutdown();
+                Manager.SaveFiles();
+                MessageBox.Show("Your files have been written.\r\nThank you for using Ederer Productivity Tools.", "Success!", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch(Exception err)
             {

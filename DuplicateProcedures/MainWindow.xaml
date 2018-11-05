@@ -25,7 +25,7 @@
             </DataGrid.CellStyle>
             <DataGrid.Columns>
                 <DataGridTextColumn IsReadOnly="True" Binding="{Binding OldName}" Header="Name" Width="300"/>
-                <DataGridCheckBoxColumn Binding="{Binding ShouldBeCopied}" Header="Edit" Width="Auto"/>
+                <DataGridCheckBoxColumn Binding="{Binding ShouldBeCreated, Mode=OneWay}" Header="Edit" Width="Auto"/>
             </DataGrid.Columns>
             <DataGrid.RowStyle>
                 <Style TargetType="DataGridRow">
